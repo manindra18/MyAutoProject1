@@ -1,0 +1,474 @@
+
+SSL Certifiate mismatch error when python is upgraded:
+------------------------------------------------------
+
+if you get below error, add the lines mentioned in the solution at the top of the script
+
+c:\scripts>python control_config_Tests.py
+Traceback (most recent call last):
+  File "control_config_Tests.py", line 53, in <module>
+    host_con = connectToHost(vc_ip,vc_user,vc_pwd)
+  File "c:\scripts\master_include.py", line 180, in connectToHost
+    s.connect(vc,vc_user,vc_pwd)
+  File "c:\users\admini~1\appdata\local\temp\2\easy_install-ho_h0w\pysphere-0.1.
+8-py2.7-win32.egg.tmp\pysphere\vi_server.py", line 101, in connect
+  File "c:\users\admini~1\appdata\local\temp\2\easy_install-ho_h0w\pysphere-0.1.
+8-py2.7-win32.egg.tmp\pysphere\resources\VimService_services.py", line 2112, in
+RetrieveServiceContent
+  File "c:\users\admini~1\appdata\local\temp\2\easy_install-ho_h0w\pysphere-0.1.
+8-py2.7-win32.egg.tmp\pysphere\ZSI\client.py", line 295, in Send
+  File "C:\Python27\lib\httplib.py", line 1274, in connect
+    server_hostname=server_hostname)
+  File "C:\Python27\lib\ssl.py", line 352, in wrap_socket
+    _context=self)
+  File "C:\Python27\lib\ssl.py", line 579, in __init__
+    self.do_handshake()
+  File "C:\Python27\lib\ssl.py", line 808, in do_handshake
+    self._sslobj.do_handshake()
+ssl.SSLError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed (_ssl.c
+:590)
+
+Solution:
+---------
+import ssl
+if hasattr(ssl, '_create_unverified_context'):
+    ssl._create_default_https_context = ssl._create_unverified_context
+  
+  
+To write an API on your own:
+-----------------------------
+
+- Verify the pysphere file like vi_server.py, vi_virtual_machine.py under C:\Python27\Lib\site-packages\pysphere
+- Also check the vsphere GUI based API refernce. https:/<vcenter ip>/mob
+
+To complete ipmitools for windows:
+-----------------------------------
+
+https://cygwin.com/setup-x86.exe
+1. Cygwin packages
+  1.gcc-core  (inside Devel category)
+  2. make (inside Devel category)
+  3. openssl-devel
+  A bunch more will get auto-required at the next prompt for "Resolving Dependencies"
+2. Download the source for ipmitool
+3. Extract the source tarball
+4. From your Cygwin Terminal go into the source directory
+  ./configure --enable-intf-lanplus
+  make
+5. The real exe binary is found in ipmitool-x.y.zz/src/.libs/ipmitool.exe
+  1. You also need the supporting DLL files
+  2. The one in ipmitool-x.y.zz/src/ipmitool.exe is only a wrapper script
+6. For a standalone copy you can pass around to systems without Cygwin installed copy all of the following (version numbers in the name may vary):
+  - Create a folder named ipmitools in C:\ and copy the .src/.libs folder to it
+  - then copy ipmitool.exe and ipmievd.exe to ipmitools folder and copy below the dll files from c:\cygwin\bin
+  ./src/.libs/ipmitool.exe
+  C:\cygwin\bin\cygcrypto-1.0.0.dll
+  C:\cygwin\bin\cygwin1.dll
+  C:\cygwin\bin\cygz.dll
+  C:\cygwin\bin\cyggcc_s-1.dll
+  C:\cygwin\bin\cyggcc_s-seh-1.dll
+7. set the path in the environmental variables
+8. Test with ipmitool -I lanplus -H hostname -U username fru
+
+
+
+To get the host-id:
+---------------------   
+    '''for key in host_name:
+        a = host_name[key]
+        if (a == "192.168.4.25"):
+            print key, a
+            host_id += key
+            print host_id
+            break
+    task = vm1.migrate(host=host_id, sync_run=False)
+    return task'''
+            
+    #list server type
+    #print "Type:",first_resource_pool
+
+To find the host resources and resource pools:
+-----------------------------------------------	
+	
+dc_list=[k for k,v in host_con.get_datacenters().items() if v==dc]
+if dc_list:
+	dc_mor=dc_list[0]
+	dc_props=VIProperty(host_con, dc_mor)
+	print dc_props
+	vmf_mor = dc_props.datastoreFolder._obj
+	#print vmf_mor
+	vmf_props = host_con._retrieve_properties_traversal(
+                                         property_names=['name'],
+                                         obj_type='VirtualMachine')
+	print vmf_props
+		
+hf_mor=dc_props.hostFolder._obj
+#get computer resources MORs
+cr_mors=host_con._retrieve_properties_traversal(property_names=['name','host'],from_node=hf_mor,obj_type='ComputeResource')
+	
+#get host MOR
+try:
+	host_mor=[k for k,v in host_con.get_hosts().items() if v==myhost][0]
+	print host_mor
+except IndexError, e:
+	host_con.disconnect()
+	logger.error("Cannot find host: "+myhost)
+#get computer resource MOR for host
+cr_mor=None
+for cr in cr_mors:
+	if cr_mor:
+		break
+	for p in cr.PropSet:
+		if p.Name=="host":
+			for h in p.Val.get_element_ManagedObjectReference():
+				if h==host_mor:
+					 cr_mor=cr.Obj
+					 break
+			if cr_mor:
+				break
+cr_props=VIProperty(host_con,cr_mor)
+print cr_props
+#get resource pool MOR
+rp_mor=cr_props.resourcePool._obj
+print rp_mor
+
+to find the vms with name:
+--------------------------
+
+def find_vms(name):
+        list_clone_paths = []
+        list_clones = []
+        a = host_con.get_registered_vms(cluster=cluster,datacenter=dc)        
+        for path in a:
+                if re.match('.*%s.*' % name, path):
+                        list_clone_paths.append(path)
+        for ipath in list_clone_paths: 
+                b = host_con.get_vm_by_path(ipath)
+                c = b.get_property('guest-id')
+                list_clones.append(c)                
+        return list_clones
+
+		
+To find the host resources and resource pools:
+-----------------------------------------------	
+'''dc_list=[k for k,v in host_con.get_datacenters().items() if v==dc]
+print dc_list
+if dc_list:
+	dc_mor=dc_list[0]
+	print dc_mor
+dc_props=VIProperty(host_con, dc_mor)
+print dc_props
+vmf_mor = dc_props.vmFolder._obj
+print vmf_mor
+hf_mor=dc_props.hostFolder._obj
+print hf_mor
+cr_mors=host_con._retrieve_properties_traversal(property_names=['name','host'],from_node=hf_mor,obj_type='ComputeResource')
+print cr_mors
+clstr = [cr.Obj for cr in cr_mors]
+print clstr
+#exhost = host_con._retrieve_properties_traversal(property_names=['host'], from_node=cr_mors)
+#print exhost 
+cr_props = [VIProperty(host_con,i) for i in clstr]
+print cr_props
+exhost = [j.host for j in cr_props]
+print exhost'''
+
+
+to call the main function by default:
+--------------------------------------
+	
+if __name__ == '__main__':
+       main()
+
+
+
+To execute ipmitools command in python script:
+------------------------------------------------
+To get chassis info
+
+os.system("ipmitool -I lanplus -H 192.168.4.2 -U root -P calvin chassis status")
+
+To execute power operations
+power on/off/reset/cycle
+
+os.system("ipmitool -I lanplus -H 192.168.4.2 -U root -P calvin power on")
+
+Finding the datasote id:
+-------------------------
+                
+DS = [k for k, v in host_con.get_datastores().items()
+             if v == iso_ds][0]
+
+			 
+Code to install paramiko modue if not already installed:
+--------------------------------------------------------
+#!/usr/bin/env python
+import os, subprocess
+
+try:
+	import paramiko
+except Exception, e:
+	print "Installing paramiko"
+	curdir = os.getcwd()
+	os.system("wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py")
+	os.system("sudo python2.6 "+curdir+"/get-pip.py")
+	os.system("yum install -y gcc libffi-devel python-devel openssl-devel && pip install cryptography && pip install -U paramiko")
+	
+Code to get the maxta private ips of all the VMs:
+--------------------------------------------------
+def host_list():
+        temp_list = []
+        nodes = []
+        cmd = "cat /etc/maxta/zookeeper/conf/zoo.cfg.dynamic | head -n-1"
+        p = subprocess.Popen([cmd], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out1 = p.communicate()[0]
+        out2 = out1.split("\n")
+        for i in out2[:-1]:
+                a = i.split("=")
+                temp_list.append(a[1])
+        for j in temp_list:
+                b = j.split(":")
+                nodes.append(b[0])
+        return nodes
+
+		
+Code to all the maxta API to get host or cluster info:
+-------------------------------------------------------
+import requests, json
+from pprint import pprint
+import shutil
+
+mgmtip = '192.168.4.51'
+
+# Creating a session
+s = requests.session()
+login_url = 'http://%s/j_spring_security_check' %mgmtip
+logout_url = 'http://%s/j_spring_security_logout' %mgmtip
+api_url = 'http://%s/api/v3/hosts' %mgmtip
+vm_url = 'http://%s/api/v3/vc/vm' %mgmtip
+snap_url = 'http://%s/api/v3/task' %mgmtip
+
+
+# Login to maxta mgmt server
+login_payload = {'j_vcenter': '192.168.4.81', 'j_username': 'root', 'j_password': 'Vedams123'}
+login = s.post(login_url, data=login_payload)
+print login.status_code
+
+# Get hostname from node#0
+api_payload = {'data':'[0]'}
+r = s.get(api_url)
+print r.status_code
+print type(r.content)
+string = r.content
+dict = json.loads(string)
+print type(dict)
+print(dict['data'][0]['hostName'])
+
+'''# Get vm details
+vmlist = {}
+vm = s.get(vm_url)
+print vm.status_code
+string1 = vm.content
+dict1 = json.loads(string1)
+for i in range(len(dict1['data'])):        
+        a = (dict1['data'][i]['vmPathName'])
+        b = a.split(' ')
+        c = b[1].split('/')
+        d = vmlist[c[0]] = (dict1['data'][i]['vmid'])
+  
+print vmlist
+for key, value in vmlist.iteritems():
+        if re.match('.*%s.*' %guest_name, key):
+                print key+": "+value
+                vmid = value
+                print vmid'''
+
+'''# Create a maxta snpshot
+snap_payload = {'operation': 'SNAPSHOT', 'vmMoid': 'vm-1386' ,'snapName': 'mani-snap1' ,'description': 'desc of snap1'}
+snapshot = s.post(snap_url, data=snap_payload)
+print snapshot.status_code
+string2 = snapshot.content
+dict2 = json.loads(string2)
+pprint(dict2)'''
+
+# Generate support bundle
+
+sb_url = 'http://%s/api/v3/supportLog/bundle' %mgmtip
+sb_prog = 'http://%s/api/v3/supportLog/bundle/progress' %mgmtip
+
+def downloadFile(url,directory,Filename):    
+  r = s.get(url, stream=True)  
+  start = time.clock()
+  f = open(directory + '\\' + Filename, 'wb')
+  for chunk in r.iter_content(chunk_size = 512 * 1024) :
+        if chunk :
+              f.write(chunk)
+              f.flush()
+              os.fsync(f.fileno())
+  f.close() 
+
+def main() :
+  url = sb_url
+  directory = os.getcwd()
+  Filename = "maxta-system-log.tar.gz.gpg"
+  src = os.getcwd()+"\%s" %Filename
+  dest = "C:\scripts\Create-VM\Logs"
+  downloadFile(url,directory,Filename)  
+  time.sleep(10)
+  print "Download complete..."
+  print "moving sb from %s to %s" %(src, dest)
+  if not os.path.exists(dest):
+        os.makedirs(dest)
+  move = shutil.move(src, dest)
+  print move
+
+main()
+
+# Logout session
+s.post(logout_url)
+
+
+#---------------------------------------------------------------------
+# Support bundle generation
+#-----------------------------------------------------------  
+
+'''mgmtip = '192.168.4.52'
+
+# Creating a session
+s = requests.session()
+login_url = 'http://%s/j_spring_security_check' %mgmtip
+logout_url = 'http://%s/j_spring_security_logout' %mgmtip
+api_url = 'http://%s/api/v3/hosts' %mgmtip
+vm_url = 'http://%s/api/v3/vc/vm' %mgmtip
+snap_url = 'http://%s/api/v3/task' %mgmtip
+
+
+# Login to maxta mgmt server
+login_payload = {'j_vcenter': '192.168.4.81', 'j_username': 'root', 'j_password': 'Vedams123'}
+login = s.post(login_url, data=login_payload)
+print login.status_code
+
+# Get hostname from node#0
+api_payload = {'data':'[0]'}
+r = s.get(api_url)
+print r.status_code
+print type(r.content)
+string = r.content
+dict = json.loads(string)
+print type(dict)
+print(dict['data'][0]['hostName'])
+
+# Get vm details
+vmlist = {}
+vm = s.get(vm_url)
+print vm.status_code
+string1 = vm.content
+dict1 = json.loads(string1)
+pprint(dict1)
+
+for i in range(len(dict1['data'])):        
+        a = (dict1['data'][i]['vmPathName'])
+        b = a.split(' ')
+        c = b[1].split('/')
+        d = vmlist[c[0]] = (dict1['data'][i]['vmid'])
+  
+print vmlist
+for key, value in vmlist.iteritems():
+        if re.match('.*%s.*' %guest_name, key):
+                print key+": "+value
+                vmid = value
+                print vmid '''
+
+'''# Create a maxta snpshot
+snap_payload = {'operation': 'SNAPSHOT', 'vmMoid': 'vm-1386' ,'snapName': 'mani-snap1' ,'description': 'desc of snap1'}
+snapshot = s.post(snap_url, data=snap_payload)
+print snapshot.status_code
+string2 = snapshot.content
+dict2 = json.loads(string2)
+pprint(dict2)
+
+# Generate support bundle
+
+
+sb_url = 'http://%s/api/v3/supportLog/bundle' %mgmtip
+sb_prog = 'http://%s/api/v3/supportLog/bundle/progress' %mgmtip
+
+def downloadFile(url,directory,Filename):    
+  r = s.get(url, stream=True)  
+  start = time.clock()
+  f = open(directory + '\\' + Filename, 'wb')
+  for chunk in r.iter_content(chunk_size = 512 * 1024) :
+        if chunk :
+              f.write(chunk)
+              f.flush()
+              os.fsync(f.fileno())
+  f.close() 
+
+def main() :
+  url = sb_url
+  directory = os.getcwd()
+  Filename = "maxta-system-log.tar.gz.gpg"
+  src = os.getcwd()+"\%s" %Filename
+  dest = "C:\scripts\Create-VM\Logs"
+  downloadFile(url,directory,Filename)  
+  time.sleep(10)
+  read_log = "cat /var/log/maxta/tomcat/supportBundleRaw-496.log"
+  print ssh_cmd(read_log,mgmtip_port,mgmt_user,mgmt_pwd)
+  print "Download complete..."
+  print "moving sb from %s to %s" %(src, dest)
+  if not os.path.exists(dest):
+        os.makedirs(dest)
+  move = shutil.move(src, dest)
+  print move
+
+main()
+
+# Logout session
+s.post(logout_url)'''
+
+#-------------------------------------------------------------------------------
+
+
+Workarounds to Known issues:
+============================
+1. Issue: If you hit the below message while executing the script
+
+pyVmomi.VmomiSupport.NotAuthenticated: (vim.fault.NotAuthenticated) {
+   dynamicType = <unset>,
+   dynamicProperty = (vmodl.DynamicProperty) [],
+   msg = 'The session is not authenticated.',
+   faultCause = <unset>,
+   faultMessage = (vmodl.LocalizableMessage) [],
+   object = 'vim.Folder:group-d1',
+   privilegeId = 'System.View'
+}
+
+Solution: edit the timout value in C:\Python27\Lib\site-packages\pyVmomi\SoapAdapter.py to -1
+Example: CONNECTION_POOL_IDLE_TIMEOUT_SEC = -1
+
+
+
+To get the ipaddress of the linux machine:
+-------------------------------------------
+def host_list():
+        temp_list = []
+        nodes = []
+        cmd = "cat /etc/maxta/zookeeper/conf/zoo.cfg.dynamic | head -n-1"
+        p = subprocess.Popen([cmd], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out1 = p.communicate()[0]
+        out2 = out1.split("\n")
+        for i in out2[:-1]:
+                a = i.split("=")
+                temp_list.append(a[1])
+        for j in temp_list:
+                b = j.split(":")
+                nodes.append(b[0])
+        logger1.info("List of nodes to be analyzed: %s\n" %nodes)
+        return nodes
+
+
+To generate randon string:
+--------------------------
+rand_string = (''.join(random.choice(string.uppercase) for i in range(5)))
+
+

@@ -1,0 +1,189 @@
+Maxta Logs Analyzer:
+---------------------
+Test0 : This will initalize maxta Logs collector
+
+VMWare related tasks on maxta guest VM:
+----------------------------------------
+ss_test1 : Snapshot of VM when it is shutdown(sc-2)
+ss_test2 : Snapshot of VM with IO running on it(sc-1)
+ss_test3 : Snapshot a running VM, create a clone of the VM and start IO on the clone.(sc-4)
+- Create a snapshot of a vm in guest_name
+- Create a vmware clone of the VM in guest_name
+
+ss_test4 : Snapshot of VM, clone VM, vMotion clone to other host, vMotion back to original host(sc-9)
+- Create a snapshot of a vm in guest_name
+- Create a vmware clone of the VM in guest_name
+- Migrate VMs from one host to another host
+
+vMotion related tests:
+----------------------
+vM_test5 : During guest VM migration, shutdown third Host (other than the source or destination host)(vMotion-5)
+- Migrate vm in guest_name from one host to another host
+- While migration in progress, reboot 3rd host(other than the source or destination host).
+
+vM_test7 : Migrate 10 Guest VM at the same time from one host to another(vMotion-6, vMotion-9)
+- Migrate 10VMs in guest_name from one host to another at a time.
+- cycle through all the hosts.
+
+vM_test10: perform storage vMotion of a VM from maxta DS to non maxta DS
+- migrate VM in guest_name to non-maxta DS from maxta DS
+
+vM_test11: perform storage vMotion of a VM from maxta DS to non maxta DS and to a different host
+- migrate VM in guest_name to non-maxta DS from maxta DS to a different host.
+
+vM_test17: Migrate Couple of Guest VMs with IO to another host at a time and back to original host(vMotion-7)
+- This will find the guest VMs
+- Migrate all of them at a time to another host and back to original host
+
+VMWare clone task:
+------------------
+cl_test6 : Creating a clone/clones, add a new disk to it and power on VM
+- Create multiple clones with name in clone_name simulatanously.
+- find all the VMs with name in clone_name.
+- Add a new vdisk to all the clones
+- power on and start IO on all the VMs.
+
+cl_test23 : Add multiple vdisks to the existing VMs
+- find all the VMs with name in guest_name.
+- Add a new vdisks to all the vms
+- power on all the VMs.
+
+Maxta snapshot and clone tasks:
+-------------------------------
+ss_test8 : Create multiple maxta snapshots from a VM
+- Create multiple maxta snapshots with names in snap_name and guest_name
+
+ss_test9 : Create multiple maxta clones from a snapshot
+- Create multiple maxta clones with names in clone_name and snap_name
+
+ss_test12: maxta snap-clone hiearachy 1
+- Create a snapshot-clone hiearachy1 from the VM specified in guest_name
+
+ss_test13: maxta snap-clone hiearachy 2
+- Create a snapshot-clone hiearachy2 from the VM specified in guest_name
+
+ss_test21: Create 150 VMs on a cluster and start IO
+- Deploy one VM from templete, add a new disk and start IO
+- Create a maxta snapshot of that VM
+- Create 150 maxta clones from that snapshot
+- Check for errors in maxta logs intermitently
+- Key parameters Need to change in config file: [guest]- guest_name, guest_disk_gb, template, disk_amount=1, vm_amount=1, snap_amount=1, snap_name, clone_name
+Note: Do not set the vm_amount, snap_amount, disk_amount greater than 1 for this test
+
+ss_test22: Create multiple maxta clones, remove existing disk#1 and add a new disk to every maxta clone
+- Create maxta snapshot with name in snam_name
+- Create a maxta clones from a snapshot in snap_name
+- Remove the disk#1 on the created maxta clone 
+- Add a new disk to that VM.
+- power on the VM and start IO 
+
+Maxta Support bundle tests:
+----------------------------
+sb_test14: Generate support bundle when all nodes are up and running
+- Generate support bundle if all the maxta nodes are up and running.
+- save the logs to Logs folder in cwd with test-case name.
+
+Crash tests on maxta VM:
+------------------------
+ct_test15: Execute crash test on all the nodes by powering off maxta VM
+- power off one maxta node at a time.
+- Analyze the maxta logs for any issues, if everything is fine, test will continue else fail.
+
+ct_test16: Execute crash test on all the nodes by killing mfs process in maxta VM
+- kill mfs service on one maxta node at a time.
+- Analyze the maxta logs for any issues, if everything is fine, test will continue else fail.
+
+HA Related test cases:
+----------------------
+ha_test18 : Will perfrom below tasks with HA enabled
+- Deploy VM from template and start IO.
+- Create maxta snapshots and clones from the deployed VM.
+- Power on all the VMs and start IO on all of them.
+- Powercycle on host at a time and analyze maxta Logs for errors. If everything is fine, test will continue to the next node, else it will fail and collect the logs.
+
+ha_test19 : Will perform below tasks with HA enabled
+- Deploy VM from template and start IO
+- Create maxta snapshots and clones from the deployed VM.
+- Power on all the VMs and start IO on all of them.
+- Powercyle all the hosts at a time and make sure all the maxta VM and guest VMs came up fine
+
+ha_test20 : Will perform below tasks with HA enabled(HA-5)
+- Deploy 3 VMs from template and Start IO
+- Power on all the VMs and start IO on all of them.
+- vMotion all the VMs to host1
+- Powercycle host1, all the VMs on that host should migrate to another host.
+- again vMotion all the VMs to host2 and powercycle host2 and so on.
+- Analyze maxta logs for errors
+
+
+
+
+
+Prerequisites for windows or linux machines:
+--------------------------------------------
+
+1. Download and install python-2.7.8(only).
+
+https://www.python.org/downloads/
+
+2. Download and install latest pip version from below site
+
+http://pip.readthedocs.org/en/stable/installing/
+
+https://bootstrap.pypa.io/get-pip.py
+python get-pip.py
+
+3. Set the environmental variables for python, pip and easy_install for below paths windows
+
+C:\Python27, C:\Python27\Scripts
+
+To upgrade pip and setuptools:
+
+pip install -U pip setuptools
+run the same command again to complete update
+
+4. install pysphere vsphere SDK Version: 0.1.8 using pip or easy_install(if 0.1.8 is not avilable you can go with 0.1.7)
+
+pip install -U pysphere==0.1.8 
+		(or)
+easy_install --upgrade pysphere==0.1.8
+
+5. Install pyvmomi vsphere SDV version 5.5.0.2014.1.1
+
+pip install --upgrade pyvmomi==5.5.0.2014.1.1
+		(or)
+easy_install --upgrade pyvmomi==5.5.0.2014.1.1
+
+6. install requests module to avoid SSL auth issues
+
+pip install -I requests
+
+7. downlaod and install C++ python compiler modules before installing paramiko 
+
+For windows:
+https://www.microsoft.com/en-in/download/details.aspx?id=44266
+
+For Centos:
+yum install -y gcc glibc libffi-devel python-devel openssl-devel pycrypto
+
+8. Install paramiko python module version 1.15.3
+
+pip install --upgrade paramiko==1.15.3
+		(or)
+easy_install -U paramiko==1.15.3
+
+9. Install Logging module
+ 
+pip install -U logging
+
+10. Finally copy the ipmitools.zip to C:\ and add environmental variable to that path.
+
+
+Procedure to Run the suit:
+==========================
+
+1. Edit the configuration file(vmware-auto.cfg) according to your test bed setup with valied info. Make sure to edit the 'testcase' section and specify the testids comma seperated in order to run the tests.
+2. Test ids are the numeric values associated with the test name i.e. ss_test1 is the test name and 1 is the test id.
+3. To run the suit execute below command.
+
+# python control_config_tests.py
