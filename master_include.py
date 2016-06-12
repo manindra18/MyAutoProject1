@@ -339,8 +339,7 @@ def get_ipaddr(vm_name):
    	if summary.guest != None:
 		ip = summary.guest.ipAddress
 		if ip != None and ip != "":
-			print ip   
-   
+			return ip   
    
 #===============================================================================================================			
 def createGuest(dc,esx_host,guest_name,guest_ver,guest_mem,guest_cpu,guest_id,guest_disk_gb,datastore,guest_network,guest_enterbios,iso_ds,iso_path):
