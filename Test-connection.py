@@ -215,12 +215,14 @@ def get_interface():
         return out2[1]
 
 
-cmd4 = "mxsplash.sh | grep -iE 'DEBUG is'"
-(outdata, rc) = ssh_cmd(cmd4,mgmtip_port,mgmt_user,mgmt_pwd)
-if re.findall("DEBUG is ENABLED!", outdata[0]):
-	print "Starting mfs service on maxta VM"
+ip = '169.254.43.7'
+
+cmd4 = "cat /var/log/zookeeper/zookeeper.log | grep -iE 'TOOK' | awk '{print $8}'"
+(outdata, rc) = ssh_cmd(cmd4,ip,mgmt_user,mgmt_pwd)
+if re.match("LEADING", outdata[0]):
+	print "This node is a LEADING"
 else:
-	print "Not found the string"
+	print "This node is a FOLLOWING"
 
 
 
