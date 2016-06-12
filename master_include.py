@@ -304,7 +304,7 @@ def check_platform():
 			logger1.error("Platform unknown...")
 			
 #================================================================================================================
-def get_ipaddr(vm_name):
+'''def get_ipaddr(vm_name):
 	global smart_con, session_key, session_user
 	
 	def get_obj(content, vimtype, name):
@@ -334,7 +334,7 @@ def get_ipaddr(vm_name):
 	content = smart_con.RetrieveContent()		
 	vm_obj = get_obj(content, [vim.VirtualMachine], vm_name)
 			
-	'''"""
+	"""
    Print information for a particular virtual machine or recurse into a folder
     with depth protection
    """
@@ -348,7 +348,7 @@ def get_ipaddr(vm_name):
       vmList = vm.childEntity
       for c in vmList:
          PrintVmInfo(c, depth+1)
-      return'''
+      return
 
    summary = vm_name.summary
    print("Name       : ", summary.config.name)
@@ -364,7 +364,7 @@ def get_ipaddr(vm_name):
 			print("IP         : ", ip)
    if summary.runtime.question != None:
 		print("Question  : ", summary.runtime.question.text)
-   print("")   
+   print("")'''   
    
    
 #===============================================================================================================			

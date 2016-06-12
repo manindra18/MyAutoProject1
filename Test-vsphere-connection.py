@@ -3,8 +3,6 @@ import sys, re, os, getpass, argparse, subprocess
 from pysphere import MORTypes, VIServer, VITask, VIProperty, VIMor, VIException, VIApiException
 from pysphere.vi_virtual_machine import VIVirtualMachine
 from pysphere.resources import VimService_services as VI
-from pyVmomi import vim, vmodl
-from pyVim.connect import SmartConnect, Disconnect
 from master_include import *
 from ConfigParser import SafeConfigParser
 import requests, json, shutil
@@ -217,72 +215,14 @@ def get_interface():
         return out2[1]
 
 
-'''ip = '169.254.43.7'
-
-cmd4 = "cat /var/log/zookeeper/zookeeper.log | grep -iE 'TOOK' | awk '{print $8}'"
-(outdata, rc) = ssh_cmd(cmd4,ip,mgmt_user,mgmt_pwd)
-if re.match("LEADING", outdata[0]):
-	print "This node is a LEADING"
+cmd4 = "mxsplash.sh | grep -iE 'DEBUG is'"
+(outdata, rc) = ssh_cmd(cmd4,mgmtip_port,mgmt_user,mgmt_pwd)
+if re.findall("DEBUG is ENABLED!", outdata[0]):
+	print "Starting mfs service on maxta VM"
 else:
-	print "This node is a FOLLOWING"'''
+	print "Not found the string"
 
 
-def get_obj(content, vimtype, name):
-	"""
-	Return an object by name, if name is None the
-	first found object is returned
-	"""
-	obj = None			
-	container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
-	for c in container.view:
-		if name:
-			if c.name == name:
-				obj = c
-				break
-		else:
-			obj = c
-			break
-	return obj
-	
-	
-vm_name = 'FM-vm1'	
-	
-def get_ipaddr(vm_name):
-	global smart_con, session_key, session_user
-	
-	'''def get_obj(content, vimtype, name):
-			"""
-			Return an object by name, if name is None the
-			first found object is returned
-			"""
-			obj = None			
-			container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
-			for c in container.view:
-				if name:
-					if c.name == name:
-						obj = c
-						break
-				else:
-					obj = c
-					break
-			return obj'''
-	
-	try:
-		session_status = smart_con.content.sessionManager.SessionIsActive(session_key, session_user)
-		logger.debug("Current session status : %s" %session_status)
-	except vim.fault.NotAuthenticated:
-		logger.info("Session Expired, Reconnecting to vCenter...")
-		smart_con, session_key, session_user = smartconnect(vc_ip,vc_user,vc_pwd)
-
-	content = smart_con.RetrieveContent()		
-	vm_obj = get_obj(content, [vim.VirtualMachine], vm_name)
-			
-	summary = vm_obj.summary
-   	if summary.guest != None:
-		ip = summary.guest.ipAddress
-		if ip != None and ip != "":
-			print ip
-get_ipaddr(vm_name)
 
 #--------------------------------------------------------------------
 
