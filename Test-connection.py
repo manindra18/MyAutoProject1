@@ -247,10 +247,12 @@ def get_obj(content, vimtype, name):
 	
 vm_name = 'FM-vm1'	
 	
-def get_ipaddr(vm_name):
+get_ipaddr(vm_name)
+
+'''def get_ipaddr(vm_name):
 	global smart_con, session_key, session_user
 	
-	'''def get_obj(content, vimtype, name):
+	def get_obj(content, vimtype, name):
 			"""
 			Return an object by name, if name is None the
 			first found object is returned
@@ -265,7 +267,7 @@ def get_ipaddr(vm_name):
 				else:
 					obj = c
 					break
-			return obj'''
+			return obj
 	
 	try:
 		session_status = smart_con.content.sessionManager.SessionIsActive(session_key, session_user)
@@ -282,7 +284,7 @@ def get_ipaddr(vm_name):
 		ip = summary.guest.ipAddress
 		if ip != None and ip != "":
 			print ip
-get_ipaddr(vm_name)
+get_ipaddr(vm_name)'''
 
 #--------------------------------------------------------------------
 
