@@ -302,7 +302,71 @@ def check_platform():
 			return slash
 		else:
 			logger1.error("Platform unknown...")
+			
+#================================================================================================================
+def get_ipaddr(vm_name):
+	global smart_con, session_key, session_user
+	
+	def get_obj(content, vimtype, name):
+			"""
+			Return an object by name, if name is None the
+			first found object is returned
+			"""
+			obj = None			
+			container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
+			for c in container.view:
+				if name:
+					if c.name == name:
+						obj = c
+						break
+				else:
+					obj = c
+					break
+			return obj
+	
+	try:
+			session_status = smart_con.content.sessionManager.SessionIsActive(session_key, session_user)
+			logger.debug("Current session status : %s" %session_status)
+	except vim.fault.NotAuthenticated:
+			logger.info("Session Expired, Reconnecting to vCenter...")
+			smart_con, session_key, session_user = smartconnect(vc_ip,vc_user,vc_pwd)
 
+	content = smart_con.RetrieveContent()		
+	vm_obj = get_obj(content, [vim.VirtualMachine], vm_name)
+			
+	'''"""
+   Print information for a particular virtual machine or recurse into a folder
+    with depth protection
+   """
+   maxdepth = 10
+
+   # if this is a group it will have children. if it does, recurse into them
+   # and then return
+   if hasattr(vm, 'childEntity'):
+      if depth > maxdepth:
+         return
+      vmList = vm.childEntity
+      for c in vmList:
+         PrintVmInfo(c, depth+1)
+      return'''
+
+   summary = vm_name.summary
+   print("Name       : ", summary.config.name)
+   print("Path       : ", summary.config.vmPathName)
+   print("Guest      : ", summary.config.guestFullName)
+   annotation = summary.config.annotation
+   if annotation != None and annotation != "":
+		print("Annotation : ", annotation)
+   print("State      : ", summary.runtime.powerState)
+   if summary.guest != None:
+		ip = summary.guest.ipAddress
+		if ip != None and ip != "":
+			print("IP         : ", ip)
+   if summary.runtime.question != None:
+		print("Question  : ", summary.runtime.question.text)
+   print("")   
+   
+   
 #===============================================================================================================			
 def createGuest(dc,esx_host,guest_name,guest_ver,guest_mem,guest_cpu,guest_id,guest_disk_gb,datastore,guest_network,guest_enterbios,iso_ds,iso_path):
 	#get dc MOR from list
