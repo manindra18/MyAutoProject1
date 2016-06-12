@@ -42,6 +42,7 @@ vm_amount = parser.getint('guest', 'vm_amount')            # specify the amount 
 disk_amount = parser.getint('guest', 'disk_amount')             #specify the amount of disks
 snap_amount = parser.getint('guest', 'snap_amount')             #specify the amount of snaps
 hierarchy_depth = parser.getint('guest', 'hierarchy_depth')    # Specify the number of levels snap-clone hierarchy should be created
+iterations = parser.getint('guest', 'iterations')		# Specify the number of iterations you want to run for a particular test
 snap_name = parser.get('guest', 'snap_name')          # Specify the name for base snapshot to be created 
 clone_name = parser.get('guest', 'clone_name')  # Specify the name for the clone to be created
 datastore = parser.get('host', 'datastore')             # Specify the name of the datastore
@@ -1388,7 +1389,7 @@ def cl_test23(guest_name,disk_amount):
 
 
 def ct_test24(testcase):
-		# Crash test by powering off maxta VM
+		# Crash test on zk-leader node by powering off maxta VM
 		name = datastore
 		vm_list = find_vms(name)
 		test_complete = "Test completed, Please check the logs for any issues..."
@@ -1420,54 +1421,62 @@ def ct_test24(testcase):
 		shutil.move(anlyz_file_src, pre_anlyz_file_dest)
 		logger1.info("Renaming '%s' to '%s'" %(anlyz_file,pre_anlyz_file))
 		time.sleep(10)
-		for vm in vm_list:
-				failed_msg = "Somthing wrong!! with maxta storage after crashing %s" %vm
-				passed_msg = "Everything looks good on %s!!, Moving to another node" %vm
-				logger1.info("Powering off maxta VM: %s\n" %vm)
-				powerOffGuest(vm)
-				time.sleep(300)
-				logger1.info("Powering on maxta VM: %s\n" %vm)
-				powerOnGuest(vm)
-				time.sleep(180)
-				(outdata2, rc2) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)
-				with open(post_file_dest, 'w') as file:
-					for item in outdata2:
-						file.write("%s\n" % item)
-				maxta_log_analyzer(testcase=testcase)
-				shutil.move(anlyz_file_src, post_anlyz_file_dest)
-				logger1.info("Renaming '%s' to '%s'" %(anlyz_file,post_anlyz_file))
-				time.sleep(10)
-				(outdata3, rc3) = diff_file(cmd2)
-				if rc3 == 1:
-						logger1.error("\n\n%s\n" %failed_msg)
-						return failed_msg
+		count = 0
+		while count <= iterations:
+			for vm in vm_list:		
+				vm_ip = get_ipaddr(vm)
+				(outdata5, rc5) = ssh_cmd(cmd4,mgmtip_port,mgmt_user,mgmt_pwd)
+				if outdata5 == "LEADING"
+					failed_msg = "Somthing wrong!! with maxta storage after crashing %s" %vm
+					passed_msg = "Everything looks good on %s!!, Moving to another node" %vm					
+					logger1.info("Powering off maxta VM: %s\n" %vm)
+					#powerOffGuest(vm)
+					time.sleep(30)
+					logger1.info("Powering on maxta VM: %s\n" %vm)
+					#powerOnGuest(vm)
+					time.sleep(18)
+					(outdata2, rc2) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)
+					with open(post_file_dest, 'w') as file:
+						for item in outdata2:
+							file.write("%s\n" % item)
+					maxta_log_analyzer(testcase=testcase)
+					shutil.move(anlyz_file_src, post_anlyz_file_dest)
+					logger1.info("Renaming '%s' to '%s'" %(anlyz_file,post_anlyz_file))
+					time.sleep(10)
+					(outdata3, rc3) = diff_file(cmd2)
+					if rc3 == 1:
+							logger1.error("\n\n%s\n" %failed_msg)
+							return failed_msg
+					else:
+							(outdata4, rc4) = diff_file(cmd3)
+							status = rc4
+							while status == 1:
+									logger1.info("\n\nFew inodes are still in STALE state\n\n")
+									(outdata2, rc2) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)
+									with open(post_file_dest, 'w') as file:
+										for item in outdata2:
+											file.write("%s\n" % item)
+									(outdata4, rc4) = diff_file(cmd3)
+									status = rc4
+									if status == 0:
+										   break
+									time.sleep(600)
+							logger1.info("\n\nResync completed...\n\n") 
+							maxta_log_analyzer(testcase=testcase)
+							shutil.move(anlyz_file_src, post_anlyz_file_dest)
+							logger1.info("Renaming '%s' to '%s'" %(anlyz_file,post_anlyz_file))
+							(outdata3, rc3) = diff_file(cmd2)
+							if rc3 == 1:
+									logger1.error("\n\n%s\n" %failed_msg)
+									return failed_msg
+							else:
+									logger1.info("\n\n%s\n" %passed_msg)
+									logger1.info("="*150+"\n")								
+									subject = "Crash test ct_test15 on %s" %cluster
+									send_mail(username,password,my_recipients,subject,passed_msg)
 				else:
-						(outdata4, rc4) = diff_file(cmd3)
-						status = rc4
-						while status == 1:
-								logger1.info("\n\nFew inodes are still in STALE state\n\n")
-								(outdata2, rc2) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)
-								with open(post_file_dest, 'w') as file:
-									for item in outdata2:
-										file.write("%s\n" % item)
-								(outdata4, rc4) = diff_file(cmd3)
-								status = rc4
-								if status == 0:
-									   break
-								time.sleep(600)
-						logger1.info("\n\nResync completed...\n\n") 
-						maxta_log_analyzer(testcase=testcase)
-						shutil.move(anlyz_file_src, post_anlyz_file_dest)
-						logger1.info("Renaming '%s' to '%s'" %(anlyz_file,post_anlyz_file))
-						(outdata3, rc3) = diff_file(cmd2)
-						if rc3 == 1:
-								logger1.error("\n\n%s\n" %failed_msg)
-								return failed_msg
-						else:
-								logger1.info("\n\n%s\n" %passed_msg)
-								logger1.info("="*150+"\n")								
-								subject = "Crash test ct_test15 on %s" %cluster
-								send_mail(username,password,my_recipients,subject,passed_msg)
+					logger1.info("Node '%s' is FOLLOWING the leader" %vm)
+			count += 1		
 		logger1.info("\n\n%s\n" %test_complete)
 		return test_complete
 		

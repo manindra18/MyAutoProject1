@@ -36,6 +36,7 @@ vm_amount = parser.getint('guest', 'vm_amount')            # specify the amount 
 disk_amount = parser.getint('guest', 'disk_amount')             #specify the amount of disks
 snap_amount = parser.getint('guest', 'snap_amount')             #specify the amount of snaps
 hierarchy_depth = parser.getint('guest', 'hierarchy_depth')    # Specify the number of levels snap-clone hierarchy should be created
+iterations = parser.getint('guest', 'iterations')		# Specify the number of iterations you want to run for a particular test
 snap_name = parser.get('guest', 'snap_name')          # Specify the name for base snapshot to be created 
 clone_name = parser.get('guest', 'clone_name')  # Specify the name for the clone to be created
 datastore = parser.get('host', 'datastore')             # Specify the name of the datastore
