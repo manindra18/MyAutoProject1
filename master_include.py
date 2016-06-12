@@ -302,7 +302,46 @@ def check_platform():
 			return slash
 		else:
 			logger1.error("Platform unknown...")
+			
+#================================================================================================================
+def get_obj(content, vimtype, name):
+			"""
+			Return an object by name, if name is None the
+			first found object is returned
+			"""
+			obj = None			
+			container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
+			for c in container.view:
+				if name:
+					if c.name == name:
+						obj = c
+						break
+				else:
+					obj = c
+					break
+			return obj
 
+#================================================================================================================
+def get_ipaddr(vm_name):
+	global smart_con, session_key, session_user
+	
+	try:
+		session_status = smart_con.content.sessionManager.SessionIsActive(session_key, session_user)
+		logger.debug("Current session status : %s" %session_status)
+	except vim.fault.NotAuthenticated:
+		logger.info("Session Expired, Reconnecting to vCenter...")
+		smart_con, session_key, session_user = smartconnect(vc_ip,vc_user,vc_pwd)
+
+	content = smart_con.RetrieveContent()		
+	vm_obj = get_obj(content, [vim.VirtualMachine], vm_name)
+			
+	summary = vm_obj.summary
+   	if summary.guest != None:
+		ip = summary.guest.ipAddress
+		if ip != None and ip != "":
+			print ip   
+   
+   
 #===============================================================================================================			
 def createGuest(dc,esx_host,guest_name,guest_ver,guest_mem,guest_cpu,guest_id,guest_disk_gb,datastore,guest_network,guest_enterbios,iso_ds,iso_path):
 	#get dc MOR from list
@@ -927,23 +966,6 @@ def clone_from_template(template,vm_name,dc,datastore,cluster,vm_folder=None,res
 					#task_done = True
 					return task.info.state 
 
-		def get_obj(content, vimtype, name):
-			"""
-			Return an object by name, if name is None the
-			first found object is returned
-			"""
-			obj = None			
-			container = content.viewManager.CreateContainerView(content.rootFolder, vimtype, True)
-			for c in container.view:
-				if name:
-					if c.name == name:
-						obj = c
-						break
-				else:
-					obj = c
-					break
-			return obj		
-		
 		try:
 			session_status = smart_con.content.sessionManager.SessionIsActive(session_key, session_user)
 			logger.debug("Current session status : %s" %session_status)

@@ -1387,6 +1387,93 @@ def cl_test23(guest_name,disk_amount):
 		logger2.info("cl_test23 : PASS")
 
 
+def ct_test24(testcase):
+		# Crash test by powering off maxta VM
+		name = datastore
+		vm_list = find_vms(name)
+		test_complete = "Test completed, Please check the logs for any issues..."
+		anlyz_file = "maxta_log_analyzer.log"
+		pre_file = "staleInode_pre.log"
+		post_file = "staleInode_post.log"
+		pre_anlyz_file = "Analyzer_pre.log"
+		post_anlyz_file = "Analyzer_post.log"
+		testcase = str(testcase)
+		dest_dir = os.getcwd()+check_pf+"Logs"+check_pf+testcase+check_pf
+		if not os.path.exists(dest_dir):
+			os.makedirs(dest_dir)		
+		anlyz_file_src = dest_dir+"%s" %anlyz_file
+		pre_file_dest = dest_dir+"%s" %pre_file
+		post_file_dest = dest_dir+"%s" %post_file
+		pre_anlyz_file_dest = dest_dir+"%s" %pre_anlyz_file
+		post_anlyz_file_dest = dest_dir+"%s" %post_anlyz_file
+		cmd1 = "showInodes --stale"		
+		cmd2 = "diff %s %s" %(pre_anlyz_file_dest, post_anlyz_file_dest)	
+		cmd3 = "diff %s %s" %(pre_file_dest, post_file_dest)
+		cmd4 = "ifconfig | grep -iE 'mtu'| grep -v lo | awk '{print $1}'"
+		
+		logger1.info("Maxta VMs found: %s" %vm_list)
+		(outdata1, rc1) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)
+		with open(pre_file_dest, 'w') as file:
+			for item in outdata1:
+				file.write("%s\n" % item)
+		maxta_log_analyzer(testcase=testcase)
+		shutil.move(anlyz_file_src, pre_anlyz_file_dest)
+		logger1.info("Renaming '%s' to '%s'" %(anlyz_file,pre_anlyz_file))
+		time.sleep(10)
+		for vm in vm_list:
+				failed_msg = "Somthing wrong!! with maxta storage after crashing %s" %vm
+				passed_msg = "Everything looks good on %s!!, Moving to another node" %vm
+				logger1.info("Powering off maxta VM: %s\n" %vm)
+				powerOffGuest(vm)
+				time.sleep(300)
+				logger1.info("Powering on maxta VM: %s\n" %vm)
+				powerOnGuest(vm)
+				time.sleep(180)
+				(outdata2, rc2) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)
+				with open(post_file_dest, 'w') as file:
+					for item in outdata2:
+						file.write("%s\n" % item)
+				maxta_log_analyzer(testcase=testcase)
+				shutil.move(anlyz_file_src, post_anlyz_file_dest)
+				logger1.info("Renaming '%s' to '%s'" %(anlyz_file,post_anlyz_file))
+				time.sleep(10)
+				(outdata3, rc3) = diff_file(cmd2)
+				if rc3 == 1:
+						logger1.error("\n\n%s\n" %failed_msg)
+						return failed_msg
+				else:
+						(outdata4, rc4) = diff_file(cmd3)
+						status = rc4
+						while status == 1:
+								logger1.info("\n\nFew inodes are still in STALE state\n\n")
+								(outdata2, rc2) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)
+								with open(post_file_dest, 'w') as file:
+									for item in outdata2:
+										file.write("%s\n" % item)
+								(outdata4, rc4) = diff_file(cmd3)
+								status = rc4
+								if status == 0:
+									   break
+								time.sleep(600)
+						logger1.info("\n\nResync completed...\n\n") 
+						maxta_log_analyzer(testcase=testcase)
+						shutil.move(anlyz_file_src, post_anlyz_file_dest)
+						logger1.info("Renaming '%s' to '%s'" %(anlyz_file,post_anlyz_file))
+						(outdata3, rc3) = diff_file(cmd2)
+						if rc3 == 1:
+								logger1.error("\n\n%s\n" %failed_msg)
+								return failed_msg
+						else:
+								logger1.info("\n\n%s\n" %passed_msg)
+								logger1.info("="*150+"\n")								
+								subject = "Crash test ct_test15 on %s" %cluster
+								send_mail(username,password,my_recipients,subject,passed_msg)
+		logger1.info("\n\n%s\n" %test_complete)
+		return test_complete
+		
+		
+		
+		
 
 
 
