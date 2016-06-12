@@ -42,6 +42,7 @@ vm_amount = parser.getint('guest', 'vm_amount')            # specify the amount 
 disk_amount = parser.getint('guest', 'disk_amount')             #specify the amount of disks
 snap_amount = parser.getint('guest', 'snap_amount')             #specify the amount of snaps
 hierarchy_depth = parser.getint('guest', 'hierarchy_depth')    # Specify the number of levels snap-clone hierarchy should be created
+iterations = parser.getint('guest', 'iterations')		# Specify the number of iterations you want to run for a particular test
 snap_name = parser.get('guest', 'snap_name')          # Specify the name for base snapshot to be created 
 clone_name = parser.get('guest', 'clone_name')  # Specify the name for the clone to be created
 datastore = parser.get('host', 'datastore')             # Specify the name of the datastore
@@ -1388,7 +1389,7 @@ def cl_test23(guest_name,disk_amount):
 
 
 def ct_test24(testcase):
-		# Crash test by powering off maxta VM
+		# Crash test on zk-leader node by powering off maxta VM
 		name = datastore
 		vm_list = find_vms(name)
 		test_complete = "Test completed, Please check the logs for any issues..."
@@ -1409,7 +1410,7 @@ def ct_test24(testcase):
 		cmd1 = "showInodes --stale"		
 		cmd2 = "diff %s %s" %(pre_anlyz_file_dest, post_anlyz_file_dest)	
 		cmd3 = "diff %s %s" %(pre_file_dest, post_file_dest)
-		cmd4 = "ifconfig | grep -iE 'mtu'| grep -v lo | awk '{print $1}'"
+		cmd4 = "cat /var/log/zookeeper/zookeeper.log | grep -iE 'TOOK' | awk '{print $8}'"
 		
 		logger1.info("Maxta VMs found: %s" %vm_list)
 		(outdata1, rc1) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)
@@ -1420,36 +1421,43 @@ def ct_test24(testcase):
 		shutil.move(anlyz_file_src, pre_anlyz_file_dest)
 		logger1.info("Renaming '%s' to '%s'" %(anlyz_file,pre_anlyz_file))
 		time.sleep(10)
-		for vm in vm_list:
-				failed_msg = "Somthing wrong!! with maxta storage after crashing %s" %vm
-				passed_msg = "Everything looks good on %s!!, Moving to another node" %vm
-				logger1.info("Powering off maxta VM: %s\n" %vm)
-				powerOffGuest(vm)
-				time.sleep(300)
-				logger1.info("Powering on maxta VM: %s\n" %vm)
-				powerOnGuest(vm)
-				time.sleep(180)
-				(outdata2, rc2) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)
-				with open(post_file_dest, 'w') as file:
-					for item in outdata2:
-						file.write("%s\n" % item)
-				maxta_log_analyzer(testcase=testcase)
-				shutil.move(anlyz_file_src, post_anlyz_file_dest)
-				logger1.info("Renaming '%s' to '%s'" %(anlyz_file,post_anlyz_file))
-				time.sleep(10)
-				(outdata3, rc3) = diff_file(cmd2)
-				if rc3 == 1:
+		count = 0
+		while count <= iterations:
+			for vm in vm_list:		
+				vm_ip = get_ipaddr(vm)
+				print vm_ip
+				(outdata5, rc5) = ssh_cmd(cmd4,vm_ip,mgmt_user,mgmt_pwd)
+				print outdata5[0]
+				if outdata5[0] == "LEADING":
+					failed_msg = "Somthing wrong!! with maxta storage after crashing %s" %vm
+					passed_msg = "Everything looks good on %s!!, moving to next iteration" %vm					
+					logger1.info("Powering off maxta VM: %s\n" %vm)
+					#powerOffGuest(vm)
+					time.sleep(30)
+					logger1.info("Powering on maxta VM: %s\n" %vm)
+					#powerOnGuest(vm)
+					time.sleep(18)
+					(outdata2, rc2) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)
+					with open(post_file_dest, 'w') as file:
+						for item in outdata2:
+							file.write("%s\n" % item)
+					maxta_log_analyzer(testcase=testcase)
+					shutil.move(anlyz_file_src, post_anlyz_file_dest)
+					logger1.info("Renaming '%s' to '%s'" %(anlyz_file,post_anlyz_file))
+					time.sleep(10)
+					(outdata3, rc3) = diff_file(cmd2)
+					if rc3 == 1:
 						logger1.error("\n\n%s\n" %failed_msg)
 						return failed_msg
-				else:
+					else:
 						(outdata4, rc4) = diff_file(cmd3)
 						status = rc4
 						while status == 1:
-								logger1.info("\n\nFew inodes are still in STALE state\n\n")
-								(outdata2, rc2) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)
-								with open(post_file_dest, 'w') as file:
-									for item in outdata2:
-										file.write("%s\n" % item)
+							logger1.info("\n\nFew inodes are still in STALE state\n\n")
+							(outdata2, rc2) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)
+							with open(post_file_dest, 'w') as file:
+								for item in outdata2:
+									file.write("%s\n" % item)
 								(outdata4, rc4) = diff_file(cmd3)
 								status = rc4
 								if status == 0:
@@ -1461,13 +1469,16 @@ def ct_test24(testcase):
 						logger1.info("Renaming '%s' to '%s'" %(anlyz_file,post_anlyz_file))
 						(outdata3, rc3) = diff_file(cmd2)
 						if rc3 == 1:
-								logger1.error("\n\n%s\n" %failed_msg)
-								return failed_msg
+							logger1.error("\n\n%s\n" %failed_msg)
+							return failed_msg
 						else:
-								logger1.info("\n\n%s\n" %passed_msg)
-								logger1.info("="*150+"\n")								
-								subject = "Crash test ct_test15 on %s" %cluster
-								send_mail(username,password,my_recipients,subject,passed_msg)
+							logger1.info("\n\n%s\n" %passed_msg)
+							logger1.info("="*150+"\n")								
+							subject = "Crash test ct_test15 on %s" %cluster
+							send_mail(username,password,my_recipients,subject,passed_msg)
+				else:
+					logger1.info("Node '%s' is FOLLOWING the leader" %vm)
+			count += 1		
 		logger1.info("\n\n%s\n" %test_complete)
 		return test_complete
 		
@@ -1688,6 +1699,24 @@ for test in testid:
 				logger1.info("Executing Test cl_test%s" %test)
 				logger1.info("##############################")
 				cl_test23(guest_name,disk_amount)
+		elif test == '24':
+				logger1.info("##############################")
+				logger1.info("Executing Test ct_test%s" %test)
+				logger1.info("##############################")
+				Analyzer_log = "Analyzer_post.log"
+				testcase =  "ct_test%s" %test
+				dest_dir = os.getcwd()+check_pf+"Logs"+check_pf+"ct_test"+test+check_pf
+				attachments = ['vmware-auto.log', 'Test-Report.log', dest_dir+Analyzer_log]
+				subject = "Crash test ct_test%s on %s" %(test,cluster)
+				message = ct_test24(testcase)
+				if re.match('Somthing wrong!!', message):
+					gen_support_bundle(testcase=testcase)
+					logger1.info("\n\nDownloading logs complete, please check the logs.\n")
+					logger2.error(message)
+					logger2.info("ct_test%s : FAIL" %test)
+				else:
+					logger2.info("ct_test%s : PASS" %test)
+				send_mail(username,password,my_recipients,subject,message,attachments)
 		else:
 				logger1.error("Please specify the testid's in config file")
 
