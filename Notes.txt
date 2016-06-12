@@ -87,10 +87,18 @@ Crash tests on maxta VM:
 ------------------------
 ct_test15: Execute crash test on all the nodes by powering off maxta VM
 - power off one maxta node at a time.
+- power on after few minutes.
 - Analyze the maxta logs for any issues, if everything is fine, test will continue else fail.
 
 ct_test16: Execute crash test on all the nodes by killing mfs process in maxta VM
 - kill mfs service on one maxta node at a time.
+- if debug is disabled mfs will start automatically else start the mfs service.grep -iE "TOOK" /var/log/zookeeper/zookeeper.log
+- Analyze the maxta logs for any issues, if everything is fine, test will continue else fail.
+
+ct_test24: Excute crash test on zkleader nodes by powering off maxta VM
+- Check for zk leader node on all the maxta VMs
+- Power off the node which is zk leader.
+- Power on after few minutes.
 - Analyze the maxta logs for any issues, if everything is fine, test will continue else fail.
 
 HA Related test cases:
