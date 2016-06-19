@@ -1432,11 +1432,11 @@ def ct_test24(testcase):
 					failed_msg = "Somthing wrong!! with maxta storage after crashing %s" %vm
 					passed_msg = "Everything looks good on %s!!, moving to next iteration" %vm					
 					logger1.info("Powering off maxta VM: %s\n" %vm)
-					#powerOffGuest(vm)
-					time.sleep(30)
+					powerOffGuest(vm)
+					time.sleep(300)
 					logger1.info("Powering on maxta VM: %s\n" %vm)
-					#powerOnGuest(vm)
-					time.sleep(18)
+					powerOnGuest(vm)
+					time.sleep(180)
 					(outdata2, rc2) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)
 					with open(post_file_dest, 'w') as file:
 						for item in outdata2:
