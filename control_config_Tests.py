@@ -535,7 +535,7 @@ def ss_test8(guest_name,snap_name,snap_amount):
 		for i in range(1, snap_amount+1):
 				sname = snap_name+str(i)
 				logger1.info("Creating maxta snapshot of VM '%s'" %(guest_name))
-				test = create_maxta_snapshot(guest_name,sname,mgmtip_port,mgmt_user,mgmt_pwd,intrface='ens192')
+				test = create_maxta_snapshot(guest_name,sname,mgmtip_port,mgmt_user,mgmt_pwd,intrface='eth1')
 				logger1.info("Waiting 30 seconds for snapshot operation to complete...")
 				time.sleep(30)
 				if test == "FAIL":
@@ -557,7 +557,7 @@ def ss_test9(snap_name,clone_name,vm_amount):
 				vm_name = '%s%s' %(clone_name,vmcount)
 				myhost = host_list[count]
 				logger1.info("Creating maxta clone '%s' from snapshot '%s'" %(vm_name,snap_name))
-				test = create_maxta_clone(snap_name,vm_name,mgmtip_port,mgmt_user,mgmt_pwd,dc,myhost,datastore,intrface='ens192')
+				test = create_maxta_clone(snap_name,vm_name,mgmtip_port,mgmt_user,mgmt_pwd,dc,myhost,datastore,intrface='eth1')
 				count += 1
 				vmcount += 1
 				if (count == hostcount) and (vmcount <= vm_amount):
@@ -623,12 +623,12 @@ def ss_test12(guest_name):
 		clone_name = 'H1_C'
 		logger1.info("Starting maxta snap-clone hieracy-1 test")        
 		logger1.info("Creating maxta snapshot '%s%s'" %(snap_name,scount))
-		test1 = create_maxta_snapshot(guest_name,snap_name+str(scount),mgmtip_port,mgmt_user,mgmt_pwd,intrface='ens192')
+		test1 = create_maxta_snapshot(guest_name,snap_name+str(scount),mgmtip_port,mgmt_user,mgmt_pwd,intrface='eth1')
 		if test1 == 'FAIL':
 			snap_failcount += 1
 		time.sleep(5)
 		logger1.info("Creating maxta clone '%s%s'" %(clone_name,ccount))
-		test2 = create_maxta_clone(snap_name+str(scount),clone_name+str(ccount),mgmtip_port,mgmt_user,mgmt_pwd,dc,host_list[hcount],datastore,intrface='ens192')
+		test2 = create_maxta_clone(snap_name+str(scount),clone_name+str(ccount),mgmtip_port,mgmt_user,mgmt_pwd,dc,host_list[hcount],datastore,intrface='eth1')
 		if test2 == 'FAIL':
 			clone_failcount += 1
 		time.sleep(120)       
@@ -636,13 +636,13 @@ def ss_test12(guest_name):
 		hcount += 1       
 		while (scount <= hierarchy_depth) and (hcount <= hostcount):
 				logger1.info("Creating maxta snapshot '%s%s'" %(snap_name,scount))
-				test1 = create_maxta_snapshot(clone_name+str(ccount),snap_name+str(scount),mgmtip_port,mgmt_user,mgmt_pwd,intrface='ens192')
+				test1 = create_maxta_snapshot(clone_name+str(ccount),snap_name+str(scount),mgmtip_port,mgmt_user,mgmt_pwd,intrface='eth1')
 				if test1 == 'FAIL':
 					snap_failcount += 1
 				time.sleep(30)
 				ccount += 1
 				logger1.info("Creating maxta clone '%s%s'" %(clone_name,ccount))
-				test2 = create_maxta_clone(snap_name+str(scount),clone_name+str(ccount),mgmtip_port,mgmt_user,mgmt_pwd,dc,host_list[hcount],datastore,intrface='ens192')
+				test2 = create_maxta_clone(snap_name+str(scount),clone_name+str(ccount),mgmtip_port,mgmt_user,mgmt_pwd,dc,host_list[hcount],datastore,intrface='eth1')
 				if test2 == 'FAIL':
 					clone_failcount += 1
 				time.sleep(120)
@@ -692,13 +692,13 @@ def ss_test13(guest_name):
 						while (count <= 3) and (hcount <= hostcount):                               
 								logger1.info("Creating maxta snapshot '%s%s'" %(snap_name,count))
 								sname.append(snap_name+str(count))
-								test1 = create_maxta_snapshot(guest_name,snap_name+str(count),mgmtip_port,mgmt_user,mgmt_pwd,intrface='ens192')            
+								test1 = create_maxta_snapshot(guest_name,snap_name+str(count),mgmtip_port,mgmt_user,mgmt_pwd,intrface='eth1')            
 								if test1 == 'FAIL':
 									snap_failcount += 1
 								time.sleep(5)
 								logger1.info("Creating maxta clone '%s%s'" %(clone_name,count))
 								cname.append(clone_name+str(count))
-								test2= create_maxta_clone(snap_name+str(count),clone_name+str(count),mgmtip_port,mgmt_user,mgmt_pwd,dc,host_list[hcount],datastore,intrface='ens192')
+								test2= create_maxta_clone(snap_name+str(count),clone_name+str(count),mgmtip_port,mgmt_user,mgmt_pwd,dc,host_list[hcount],datastore,intrface='eth1')
 								if test2 == 'FAIL':
 									clone_failcount += 1
 								time.sleep(60)
@@ -723,13 +723,13 @@ def ss_test13(guest_name):
 								while (count <= 3) and (hcount <= hostcount):                                        
 										logger1.info("Creating maxta snapshot '%s%s'" %(snap_name,count))
 										new_sname.append(snap_name+str(count))
-										test1 = create_maxta_snapshot(vm,snap_name+str(count),mgmtip_port,mgmt_user,mgmt_pwd,intrface='ens192')            
+										test1 = create_maxta_snapshot(vm,snap_name+str(count),mgmtip_port,mgmt_user,mgmt_pwd,intrface='eth1')            
 										if test1 == 'FAIL':
 											snap_failcount += 1
 										time.sleep(30)
 										logger1.info("Creating maxta clone '%s%s'" %(vm,count))
 										new_cname.append(vm+str(count))
-										test2 = create_maxta_clone(snap_name+str(count),vm+str(count),mgmtip_port,mgmt_user,mgmt_pwd,dc,host_list[hcount],datastore,intrface='ens192')
+										test2 = create_maxta_clone(snap_name+str(count),vm+str(count),mgmtip_port,mgmt_user,mgmt_pwd,dc,host_list[hcount],datastore,intrface='eth1')
 										if test2 == 'FAIL':
 											clone_failcount += 1
 										time.sleep(60)                                        
@@ -1244,7 +1244,7 @@ def ss_test21(vm_name,testcase):
 			vm_name = '%s-%s' %(cname,i)
 			myhost = host_list[count]			
 			logger1.info("Creating maxta clone '%s' from snapshot '%s'" %(vm_name,sname))
-			create_maxta_clone(sname,vm_name,mgmtip_port,mgmt_user,mgmt_pwd,dc,myhost,datastore,intrface='ens192')
+			create_maxta_clone(sname,vm_name,mgmtip_port,mgmt_user,mgmt_pwd,dc,myhost,datastore,intrface='eth1')
 			count += 1
 			vmcount += 1			
 			if (count == hostcount) and (i <= vms_amount):
@@ -1302,7 +1302,7 @@ def ss_test22(snap_name,clone_name,vm_amount):
 		mylist = find_vms(clone_name)		
 		if len(mylist) == int(0):			
 			# Create maxta snapshot
-			create_maxta_snapshot(guest_name,snap_name,mgmtip_port,mgmt_user,mgmt_pwd,intrface='ens192')
+			create_maxta_snapshot(guest_name,snap_name,mgmtip_port,mgmt_user,mgmt_pwd,intrface='eth1')
 			# Create multiple maxta clones
 			clone_failcount = 0
 			disk_failcount = 0
@@ -1313,7 +1313,7 @@ def ss_test22(snap_name,clone_name,vm_amount):
 					vm_name = '%s%s' %(clone_name,vmcount)
 					myhost = host_list[count]
 					logger1.info("Creating maxta clone '%s' from snapshot '%s'" %(vm_name,snap_name))
-					test1 = create_maxta_clone(snap_name,vm_name,mgmtip_port,mgmt_user,mgmt_pwd,dc,myhost,datastore,intrface='ens192')
+					test1 = create_maxta_clone(snap_name,vm_name,mgmtip_port,mgmt_user,mgmt_pwd,dc,myhost,datastore,intrface='eth1')
 					if test1 == "FAIL":
 						clone_failcount += 1
 					remove_disk_vm(vm_name,unitNumber=1,wait=True)
@@ -1411,7 +1411,7 @@ def ct_test24(testcase):
 		cmd2 = "diff %s %s" %(pre_anlyz_file_dest, post_anlyz_file_dest)	
 		cmd3 = "diff %s %s" %(pre_file_dest, post_file_dest)
 		#cmd4 = "cat /var/log/zookeeper/zookeeper.log | grep -iE 'TOOK' | awk '{print $8}'"
-		cmd4 = "cat /var/log/maxta/zookeeper/zookeeper.log | grep -iE 'TOOK' | awk '{print $8}'"
+		cmd4 = "cat /var/log/maxta/zookeeper/zookeeper.log|grep -iE 'TOOK'|awk '{print $8}'|tail -n 1"
 		
 		logger1.info("Maxta VMs found: %s" %vm_list)
 		(outdata1, rc1) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)

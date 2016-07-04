@@ -249,8 +249,9 @@ msg9 = "zklist -o -r | grep -iE 'FAILED'"
 msg10 = "cat /var/log/messages* | grep -iE 'MFS: Startup procedure failed. Attempting restart.'"
 msg11 = "df -h | head -n 2 | grep -iE '/'"
 msg12 = "cat /var/log/maxta/mfsd.log | grep -iE 'MEMORY POOL ALLOCATION FAILURE'"
+msg13 = "cat /var/log/maxta/mfsd.log | grep -iE 'zookeeper timeout'"
 
-err_msgs = [msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9, msg10, msg11, msg12]
+err_msgs = [msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9, msg10, msg11, msg12, msg13]
 hosts = host_list()
 
 def set_ip():
