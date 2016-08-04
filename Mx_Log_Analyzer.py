@@ -250,8 +250,8 @@ msg10 = "cat /var/log/messages* | grep -iE 'MFS: Startup procedure failed. Attem
 msg11 = "df -h | head -n 2 | grep -iE '/'"
 msg12 = "cat /var/log/maxta/mfsd.log | grep -iE 'MEMORY POOL ALLOCATION FAILURE'"
 msg13 = "cat /var/log/maxta/mfsd.log | grep -iE 'zookeeper timeout'"
-
-err_msgs = [msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9, msg10, msg11, msg12, msg13]
+msg14 = "mxsplash.sh"
+err_msgs = [msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9, msg10, msg11, msg12, msg13, msg14]
 hosts = host_list()
 
 def set_ip():
@@ -329,7 +329,13 @@ for ip in hosts:
 					for i in out:
 						logger2.info(i)				
 					logger2.info("="*100)
-					logger1.info("Please check the console or 'maxta_log_analyzer_detail.log' file system capacity utilization")
+					logger1.info("Please check the console or 'maxta_log_analyzer_detail.log' file for system capacity utilization")
+					logger1.info("="*100)
+				elif cmd == msg14:
+					for i in out:
+						logger2.info(i)				
+					logger2.info("="*100)
+					logger1.info("Please check the console or 'maxta_log_analyzer_detail.log' file for mxsplash output")
 					logger1.info("="*100)
 				else:
 					time.sleep(10)
