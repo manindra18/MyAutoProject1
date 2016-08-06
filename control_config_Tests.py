@@ -1411,7 +1411,7 @@ def ct_test24(testcase):
 		cmd2 = "diff %s %s" %(pre_anlyz_file_dest, post_anlyz_file_dest)	
 		cmd3 = "diff %s %s" %(pre_file_dest, post_file_dest)
 		#cmd4 = "cat /var/log/zookeeper/zookeeper.log | grep -iE 'TOOK' | awk '{print $8}'"
-		cmd4 = "cat /var/log/maxta/zookeeper/zookeeper.log|grep -iE 'TOOK'|awk '{print $8}'|tail -n 1"
+		cmd4 = "cat /var/log/maxta/zookeeper/zookeeper.*|grep -iE 'TOOK'|awk '{print $8}'|tail -n 1"
 		
 		logger1.info("Maxta VMs found: %s" %vm_list)
 		(outdata1, rc1) = ssh_cmd(cmd1,mgmtip_port,mgmt_user,mgmt_pwd)
