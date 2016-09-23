@@ -1153,7 +1153,7 @@ def ha_test20(vm_name,testcase):
 		else:   
 				test_complete = "Test completed, Please check the logs for any issues..."
 				# Creating a VM from template and start IO
-				cl_test7()
+				cl_test6(vm_name)
 
 				# vMotion of VMs to another host
 				prelog = True
