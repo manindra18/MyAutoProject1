@@ -8,11 +8,11 @@ import argparse
 
 if len(sys.argv) < 2:
 	try:
-                import logging, requests
+                import logging
 	except Exception, e:
-		print "Installing modules logging and requests.."
-		os.system("easy_install -U requests")
-		import logging, requests
+		print "Installing modules logging.."
+		os.system("easy_install -U logging")
+		import logging
 if len(sys.argv) > 3:
 	try:
 		import paramiko, logging, requests
