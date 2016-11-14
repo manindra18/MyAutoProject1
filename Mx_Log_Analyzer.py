@@ -415,7 +415,11 @@ else:
 					logger2.info("="*100)
 					logger1.info("Please check the console or 'maxta_log_analyzer_detail.log' for mfsd restart info")
 					logger1.info("="*100)
+<<<<<<< HEAD
 				elif cmd == msg2:
+=======
+				 elif cmd == msg2:
+>>>>>>> 08247a2da3b3566ed2450e6ff9c4a1a25049d6fc
                                         for i in out:
                                                 if re.search("Assertion/Deliberate program termination", i):
                                                         logger2.info(i)
