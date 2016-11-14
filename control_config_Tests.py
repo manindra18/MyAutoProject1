@@ -129,9 +129,13 @@ def diff_file(cmd):
 
 def maxta_log_analyzer(download=True,testcase=None,rand_string=None):
 		script_file = "Mx_Log_Analyzer.py"		
-		script_src = os.getcwd()+check_pf+script_file		
+		script_src = os.getcwd()+check_pf+script_file
+		nfs_dir = "/home/TestLogs/"
+		if not os.path.isfile(dest_dir+script_src):
+			shutil.copy(script_src, nfs_dir)
 		logger1.info("Executing the %s script..." %script_file)
-		cmd = "python "+script_src+" -m "+mgmtip_port+" -v "+vc_ip+" -u "+vc_user+" -p "+vc_pwd
+		#cmd = "python "+script_src+" -m "+mgmtip_port+" -v "+vc_ip+" -u "+vc_user+" -p "+vc_pwd
+		cmd = "python "+script_src 
 		os.system(cmd)
 		time.sleep(10)
 		if download:

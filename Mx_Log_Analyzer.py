@@ -6,9 +6,17 @@ import time, re, json
 from pprint import pprint
 import argparse
 
-try:
+if len(sys.argv) < 2:
+	try:
+		import logging
+	except Exception, e:
+		print "Installing modules logging.."
+		os.system("easy_install -U logging")
+		import logging
+if len(sys.argv) > 3:
+	try:
 		import paramiko, logging, requests
-except Exception, e:
+	except Exception, e:
 		print ("Installing paramiko")
 		os.system("wget -P /tmp --no-check-certificate https://bootstrap.pypa.io/get-pip.py")
 		time.sleep(10)
@@ -237,6 +245,23 @@ def get_interface():
 		out2 = out1.split(":\n")
 		return out2[1]
 
+def set_ip():
+	x = hosts[0]
+	y = x.split('.') 
+	y[-1] = str(55)
+	ip = ".".join(y)
+	interface = get_interface()
+	ipaddr = "ifconfig %s %s netmask 255.255.255.0" %(interface,ip)
+	logger.info("IpAddress %s is set to interface %s" %(ip,interface))
+	os.system(ipaddr)
+
+def run_cmd(ip,cmd):
+	mycmd = "runuser -l tomcat -c 'quorumHelper -t %s -e \"%s\"'" %(ip,cmd)
+	p = subprocess.Popen(mycmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	out = p.communicate()[0]
+	rc = p.returncode
+	return out, rc
+
 msg1 = "cat /var/log/maxta/mfsd.log* | grep -iE '=== MFS' | tail -n+2"
 msg2 = "cat /var/log/maxta/mfsd.log* | grep -iE 'Assertion'"
 msg3 = "cat /var/log/maxta/mfsd.log* | grep -iE 'Out of buffers'"
@@ -249,24 +274,16 @@ msg9 = "zklist -o -r | grep -iE 'FAILED'"
 msg10 = "cat /var/log/messages* | grep -iE 'MFS: Startup procedure failed. Attempting restart.'"
 msg11 = "df -h | head -n 2 | grep -iE '/'"
 msg12 = "cat /var/log/maxta/mfsd.log | grep -iE 'MEMORY POOL ALLOCATION FAILURE'"
+msg13 = "cat /var/log/maxta/mfsd.log | grep -iE 'zookeeper timeout'"
+msg14 = "mxsplash.sh"
+err_msgs = [msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9, msg10, msg11, msg12, msg13, msg14]
 
-err_msgs = [msg1, msg2, msg3, msg4, msg5, msg6, msg7, msg8, msg9, msg10, msg11, msg12]
 hosts = host_list()
 
-def set_ip():
-	x = hosts[0]
-	y = x.split('.') 
-	y[-1] = str(55)
-	ip = ".".join(y)
-	interface = get_interface()
-	ipaddr = "ifconfig %s %s netmask 255.255.255.0" %(interface,ip)
-	logger.info("IpAddress %s is set to interface %s" %(ip,interface))
-	os.system(ipaddr)
-	
-set_ip()
-
-for ip in hosts:
-	def ping():	
+if len(sys.argv) > 3:	
+	set_ip()
+	for ip in hosts:
+		def ping():	
 			platform = sys.platform
 			if platform == 'linux2':    
 				cmd = "ping -c 1 "+ip
@@ -290,18 +307,18 @@ for ip in hosts:
 				logger1.error("Platform unknown...")
 				logger2.error("Platform unknown...")
 
-	ping_status = ping()
-	while ping_status != 0:
-		print "waiting 120 secs"
-		time.sleep(120)
 		ping_status = ping()
-	else:
-		logger.info(ip+" is reachable\n")
-		logger1.info("Executing check list commands on %s:" %ip)
-		logger2.info("Executing check list commands on %s:" %ip)
-		logger1.info("################################################\n")
-		logger2.info("################################################\n")
-		for cmd in err_msgs:
+		while ping_status != 0:
+			print "waiting 120 secs"
+			time.sleep(120)
+			ping_status = ping()
+		else:
+			logger.info(ip+" is reachable\n")
+			logger1.info("Executing check list commands on %s:" %ip)
+			logger2.info("Executing check list commands on %s:" %ip)
+			logger1.info("################################################\n")
+			logger2.info("################################################\n")
+			for cmd in err_msgs:
 				logger1.info("Executing %s: \n" %(cmd))
 				logger2.info("Executing %s: \n" %(cmd))
 				(out,rc) = remote_ssh_cmd(cmd,ip,username,password)
@@ -328,12 +345,92 @@ for ip in hosts:
 					for i in out:
 						logger2.info(i)				
 					logger2.info("="*100)
-					logger1.info("Please check the console or 'maxta_log_analyzer_detail.log' file system capacity utilization")
+					logger1.info("Please check the console or 'maxta_log_analyzer_detail.log' file for system capacity utilization")
+					logger1.info("="*100)
+				elif cmd == msg14:
+					for i in out:
+						logger2.info(i)				
+					logger2.info("="*100)
+					logger1.info("Please check the console or 'maxta_log_analyzer_detail.log' file for mxsplash output")
 					logger1.info("="*100)
 				else:
-					time.sleep(10)
+					time.sleep(5)
 					for i in out:
 						logger1.info(i)
 						logger2.info(i)
+					logger1.info("="*100)
+					logger2.info("="*100)
+else:
+	for ip in hosts:
+		def ping():	
+			platform = sys.platform
+			if platform == 'linux2':    
+				cmd = "ping -c 1 "+ip
+				p = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+				out = p.communicate()[0]
+				out = out.lower()
+				if re.search('ttl=64', out):
+					return 0
+				else:
+					return 1
+			elif platform == 'win32':
+				cmd = "ping -n 1 "+ip
+				p = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+				out = p.communicate()[0]
+				out = out.lower()
+				if re.search('ttl=64', out):
+					return 0
+				else:
+					return 1
+			else:
+				logger1.error("Platform unknown...")
+				logger2.error("Platform unknown...")
+
+		ping_status = ping()
+		while ping_status != 0:
+			print "waiting 120 secs"
+			time.sleep(120)
+			ping_status = ping()
+		else:
+			logger.info(ip+" is reachable\n")
+			logger1.info("Executing check list commands on %s:" %ip)
+			logger2.info("Executing check list commands on %s:" %ip)
+			logger1.info("################################################\n")
+			logger2.info("################################################\n")
+			for cmd in err_msgs:
+				logger1.info("Executing %s: \n" %(cmd))
+				logger2.info("Executing %s: \n" %(cmd))
+				(out,rc) = run_cmd(ip,cmd)
+				if cmd == msg1:
+					logger2.info(out)
+					logger2.info("="*100)
+					logger1.info("Please check the console or 'maxta_log_analyzer_detail.log' for mfsd restart info")
+					logger1.info("="*100)
+				elif cmd == msg6 and rc == 0:                                
+					count = 0
+					while rc == 0 and count <= 3:
+						(out,rc) = run_cmd(ip,cmd)                                        
+						if rc != 0:
+							logger1.info(out)                                                        
+							logger2.info(out)                                                        
+							break
+						count += 1
+						time.sleep(10)
+					logger1.info("="*100)
+					logger2.info("="*100)
+				elif cmd == msg11:
+					logger2.info(out)				
+					logger2.info("="*100)
+					logger1.info("Please check the console or 'maxta_log_analyzer_detail.log' file for system capacity utilization")
+					logger1.info("="*100)
+				elif cmd == msg14:
+					logger2.info(out)				
+					logger2.info("="*100)
+					logger1.info("Please check the console or 'maxta_log_analyzer_detail.log' file for mxsplash output")
+					logger1.info("="*100)
+				else:
+					time.sleep(5)
+					logger1.info(out)
+					logger2.info(out)
 					logger1.info("="*100)
 					logger2.info("="*100)

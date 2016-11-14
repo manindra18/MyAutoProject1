@@ -45,7 +45,8 @@ dc = parser.get('host', 'dc')                           # Specify the name of th
 iso_ds = parser.get('host', 'iso_ds')                 # Datastore of the iso
 iso_path = parser.get('host', 'iso_path')             # iso to mount (from datastore) path should be like "<path>/.iso" without / prefix to path
 resource_pool = parser.get('host', 'resource_pool')     # specify the resource pool where you want to create VM
-cluster = parser.get('host', 'cluster')                         # Specify the cluster name
+cluster = parser.get('host', 'cluster')                 # Specify the cluster name
+nfs_mount = parser.get('host', 'nfs_mount')             # Specify the nfs mount where logs to be saved for Maxta-Log-Analyzer
 mgmtip_port = parser.get('Mgmt_server', 'mgmt_ip')      # Specify the maxta management server ip --> mandatory to execute maxta commands
 mgmt_user = parser.get('Mgmt_server', 'mgmt_user')        # Specify the maxta management username --> mandatory to execute maxta commands
 mgmt_pwd = parser.get('Mgmt_server', 'mgmt_pwd')          # Specify the maxta management password --> mandatory to execute maxta commands
@@ -97,12 +98,20 @@ def diff_file(cmd):
 	return (out,p.returncode)
 
 def maxta_log_analyzer(download=True,testcase=None,rand_string=None):
-		script_file = "Maxta_Log_Analyzer.py"		
-		script_src = os.getcwd()+check_pf+script_file		
+		nfs_mounted = os.system("df -h | grep -iE /media | awk '{print $1}'")
+		if not re.search(nfs_mounted, nfs_mount):
+			print "nfs share is already mounted"
+		script_file = "Mx_Log_Analyzer.py"		
+		script_src = os.getcwd()+check_pf+script_file
+		logdir = "/media/"		
+		log_dir_script = logdir+script_file
+		if not os.path.isfile(log_dir_script):
+			shutil.copy(script_src, logdir)
 		logger1.info("Executing the %s script..." %script_file)
-		cmd = "python "+script_src+" -m "+mgmtip_port+" -v "+vc_ip+" -u "+vc_user+" -p "+vc_pwd		
-		os.system(cmd)
-		time.sleep(10)
+		cmd = "python "+script_src+" -m "+mgmtip_port+" -v "+vc_ip+" -u "+vc_user+" -p "+vc_pwd
+		#cmd = "python "+script_src 
+		
+		'''time.sleep(10)
 		if download:
 				if rand_string == None:
 					rand_string = (''.join(random.choice(string.lowercase) for i in range(5)))
@@ -114,14 +123,24 @@ def maxta_log_analyzer(download=True,testcase=None,rand_string=None):
 						if not os.path.exists(dest_dir):
 								os.makedirs(dest_dir)
 						logger1.info("Moving 'maxta_log_analyzer.log' file to %s" %log_dest)
-						shutil.move(log_src, log_dest)
+						try:
+							shutil.move(log_src, log_dest)
+						except IOError, e:
+							return "FAIL"
+						else:
+							return "PASS"
 				else:
 						dest_dir = os.getcwd()+check_pf+"Logs"+check_pf+testcase+check_pf
 						log_dest = dest_dir+log_file
 						if not os.path.exists(dest_dir):
 								os.makedirs(dest_dir)
 						logger1.info("Moving 'maxta_log_analyzer.log' file to %s" %log_dest)
-						shutil.move(log_src, log_dest)
+						try:
+							shutil.move(log_src, log_dest)
+						except IOError, e:
+							return "FAIL"
+						else:
+							return "PASS"'''
 
 def cluster_status(rand_string,ip,prelog_include=True,mycmd1=None,mycmd2=None,mycmd3=None,mycmd4=None,mycmd5=None,testcase=None):
 		anlyz_file = "maxta_log_analyzer.log"
@@ -210,13 +229,24 @@ def cluster_status(rand_string,ip,prelog_include=True,mycmd1=None,mycmd2=None,my
 						subject = "%s test status on %s" %(testcase,cluster)
 						send_mail(username,password,my_recipients,subject,passed_msg)
 
-def get_interface():
+
+
+maxta_log_analyzer()
+
+
+
+
+
+
+
+
+
+'''def get_interface():
         cmd = "ifconfig | grep -iE 'mtu'| grep -v lo | awk '{print $1}'"
         p = subprocess.Popen([cmd], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         out1 = p.communicate()[0]
         out2 = out1.split(":\n")
-        return out2[1]
-
+        return out2[1]'''
 
 '''ip = '169.254.43.7'
 
@@ -228,7 +258,7 @@ else:
 	print "This node is a FOLLOWING"'''
 
 
-def get_obj(content, vimtype, name):
+'''def get_obj(content, vimtype, name):
 	"""
 	Return an object by name, if name is None the
 	first found object is returned
@@ -243,12 +273,7 @@ def get_obj(content, vimtype, name):
 		else:
 			obj = c
 			break
-	return obj
-	
-	
-vm_name = 'FM-vm1'	
-	
-get_ipaddr(vm_name)
+	return obj'''
 
 '''def get_ipaddr(vm_name):
 	global smart_con, session_key, session_user

@@ -186,6 +186,8 @@ pip install -U logging
 
 10. Finally copy the ipmitools.zip to C:\ and add environmental variable to that path.
 
+11. Create a directory "/home/TestLogs" and mount local NFS server to that mount point to save analyser logs. suit will mount the same nfs server on maxta VMs
+
 
 Procedure to Run the suit:
 ==========================
