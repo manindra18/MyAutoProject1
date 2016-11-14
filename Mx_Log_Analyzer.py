@@ -328,6 +328,15 @@ if len(sys.argv) > 3:
 					logger2.info("="*100)
 					logger1.info("Please check the console or 'maxta_log_analyzer_detail.log' for mfsd restart info")
 					logger1.info("="*100)
+				elif cmd == msg2:
+					for i in out:
+						if re.search("Assertion/Deliberate program termination", i):
+							logger2.info(i)
+						else:
+							logger2.info(i)
+							logger1.info(i)
+	                	        logger2.info("="*100)	
+        		               	logger1.info("="*100)
 				elif cmd == msg6 and rc == 1:                                
 					count = 0
 					while rc == 1 and count <= 3:
@@ -406,6 +415,15 @@ else:
 					logger2.info("="*100)
 					logger1.info("Please check the console or 'maxta_log_analyzer_detail.log' for mfsd restart info")
 					logger1.info("="*100)
+				 elif cmd == msg2:
+                                        for i in out:
+                                                if re.search("Assertion/Deliberate program termination", i):
+                                                        logger2.info(i)
+                                                else:
+                                                        logger2.info(i)
+                                                        logger1.info(i)
+                                        logger2.info("="*100)
+                                        logger1.info("="*100)
 				elif cmd == msg6 and rc == 0:                                
 					count = 0
 					while rc == 0 and count <= 3:
